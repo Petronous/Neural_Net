@@ -68,11 +68,16 @@ int main()
 	DBOUT(net.to_string());
 	DBOUT(my_to_string(net.get_layer_architecture()));
 
-	NeuralNet start_net(std::vector<int>{3, 3, 3, 1});
-	Trainer trainer(start_net, 100, 0.2, 0.1, 0.5);
+	std::ofstream output_file{ "best_in_gen.txt", std::ios::app };
+	net2.save_to_file(output_file);
+	output_file.close();
+
+
+	NeuralNet start_net(std::vector<int>{3, 4, 4, 1});
+	Trainer trainer(start_net, 100, 0.4, 0.2, 0.5);
 	trainer.set_eval_func(&evaluate_one);
 
-	//start_net = trainer.train(100);
+	start_net = trainer.train(100);
 	
 	DBOUT(start_net.to_string());
 	DBOUT(my_to_string(start_net.score));

@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <Eigen/Dense>
+#include <fstream>
 #include "utils.hpp"
 #include "net.hpp"
 #include "trainer.hpp"

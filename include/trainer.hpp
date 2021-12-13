@@ -39,22 +39,32 @@ class Trainer {
 			current.mutate_random_weight();
 		}
 		int mutation_counter = 0;
-		while (_mutate_rand_prob < rand_float_in_range(0, 1, _mutate_prob_precision && mutation_counter < 100)) {
+		while (current._mutate_rand_prob < rand_float_in_range(0, 1, _mutate_prob_precision && mutation_counter < 100)) {
 			current.mutate_random_weight(true);
 			mutation_counter++;
 		}
 		mutation_counter = 0;
-		while (_mutate_mod_prob < rand_float_in_range(0, 1, _mutate_prob_precision) && mutation_counter < 100) {
+		while (current._mutate_mod_prob < rand_float_in_range(0, 1, _mutate_prob_precision) && mutation_counter < 100) {
 			current.mutate_random_weight();
 			mutation_counter++;
 		}
 
-		while mutate
+		mutation_counter = 0;
+		while (_mutate_rand_prob / 10 < rand_float_in_range(0, 1, _mutate_prob_precision) && mutation_counter < 10) {
+			current.mutate_mutation_param(true);
+			mutation_counter++;
+		}
+		mutation_counter = 0;
+		while (_mutate_mod_prob / 10 < rand_float_in_range(0, 1, _mutate_prob_precision) && mutation_counter < 10) {
+			current.mutate_mutation_param();
+			mutation_counter++;
+		}
 	}
 
-	void reproduce_fair(float& max_score) {
+	void reproduce_fair(float& max_score, NeuralNet& best) {
 		sort_population();
 		max_score = _population[0].score;
+		best = _population[0];
 		int first_death_i = max(_pop_size * (1-_kill_frac), 1);
 		int copy_from = 0;
 		for (int i = first_death_i; i < _pop_size; i++) {
@@ -65,8 +75,8 @@ class Trainer {
 		}
 	}
 
-	void reproduce_best(int& max_score) {
-		NeuralNet best = get_best_net();
+	void reproduce_best(int& max_score, NeuralNet& best) {
+		best = get_best_net();
 		max_score = best.score;
 		_population[0] = best;
 		for (int i = 1; i < _pop_size; i++) {
@@ -95,11 +105,12 @@ public:
 		std::vector<int> architecture = starting_net.get_layer_architecture();
 		for (int i = 1; i < pop_size; i++) {
 			if (randomize) {
-				_population.push_back(NeuralNet(architecture));
+				_population.push_back(NeuralNet(architecture, mutate_mod_prob, 0.1, mutate_rand_prob));
 			}
 			else {
 				starting_net.set_score(0);
 				_population.push_back(starting_net);
+				_population[i].set_mutation_params(mutate_mod_prob, 0.1, mutate_rand_prob, 2);
 				_population[i].mutate_random_weight();
 			}
 		}
@@ -132,7 +143,7 @@ public:
 			}
 
 			if (!(generation < max_gen && max_score < stop_after_score && std::time(NULL) - start_time < max_time)) break;
-			reproduce_fair(max_score);
+			reproduce_fair(max_score, best);
 			
 			DBOUT(my_to_string(generation) + " " + my_to_string(max_score) + "\n***\n" + best.to_string());
 			generation++;

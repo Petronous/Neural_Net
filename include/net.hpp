@@ -53,6 +53,11 @@ public:
 		_mutate_rand_range(mutate_rand_range)
 	{}
 
+	NeuralNet(std::string line) {
+		std::istringstream input{ line };
+		//TODO
+	}
+
 	/**
 	* @brief input will be modified by this function and also serve to hold the result
 	* 
@@ -114,7 +119,7 @@ public:
 		}
 
 		if (set_random) {*param = rand_float_in_range(mn, mx, precision);} 
-		else {*param = clamp(*param + rand_float_in_range(-_mutate_mod_range, _mutate_mod_range, precision), mn, mx);}
+		else {*param = clamp(*param + rand_float_in_range(-_mutate_mod_range/10, _mutate_mod_range/10, precision), mn, mx);}
 
 	}
 
@@ -133,16 +138,39 @@ public:
 		return os;
 	}
 
-	std::string to_string() {
+	std::string to_string(bool print_net=false) {
 		std::ostringstream return_stream;
 		return_stream << layers_num << "\n";
-		return_stream << "MMP: " << _mutate_mod_prob << " MMR: " << _mutate_mod_range << " MRP: " << _mutate_rand_prob << "\n";
-		for (int i = 0; i < layers_num; i++) {
-			return_stream << "---\n" << layers_weights[i] << "\n";
+		return_stream << "MMP: " << _mutate_mod_prob << " MMR: " << _mutate_mod_range << " MRP: " << _mutate_rand_prob << " MRR: " << _mutate_rand_range << "\n";
+		if (print_net) {
+			for (int i = 0; i < layers_num; i++) {
+				return_stream << "---\n" << layers_weights[i] << "\n";
+			}
 		}
 		return return_stream.str();
 	}
 
+	void save_to_file(std::ofstream& output) {
+		std::vector<int> architecture = get_layer_architecture();
+		for (auto i : architecture) {
+			output << i << " ";
+		}
+		output << " | ";
+		output << _mutate_mod_prob << " " << _mutate_mod_range << " " << _mutate_rand_prob << " " << _mutate_rand_range;
+		output << " | ";
+		int x_size;
+		int y_size;
+		for (int i = 0; i < layers_num; i++) {
+			x_size = architecture[i];
+			y_size = architecture[i+1];
+			for (int x = 0; x < x_size; x++) {
+				for (int y = 0; y < y_size; y++) {
+					output << layers_weights[i](x, y) << " ";
+				}
+			}
+		}
+		output << "\n";
+	}
 };
 
 
