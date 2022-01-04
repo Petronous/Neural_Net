@@ -125,7 +125,7 @@ public:
 		_mass_eval_bool = true;
 	}
 
-	NeuralNet train(int max_gen = 100, float stop_after_score = FLT_MAX, int max_time = 1 << 30) {
+	NeuralNet train(std::ofstream& best_save_file, int max_gen = 100, float stop_after_score = FLT_MAX, int max_time = 1 << 30) {
 		float max_score = -FLT_MAX;
 		int generation = 0;
 		int start_time = std::time(NULL);
@@ -142,6 +142,7 @@ public:
 				}
 			}
 
+			best.save_to_file(best_save_file);
 			if (!(generation < max_gen && max_score < stop_after_score && std::time(NULL) - start_time < max_time)) break;
 			reproduce_fair(max_score, best);
 			

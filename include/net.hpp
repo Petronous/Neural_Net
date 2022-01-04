@@ -27,6 +27,10 @@ public:
 	float _mutate_mod_prob;
 	float _mutate_rand_prob; //should be read-only
 	float score = 0;
+
+	/**
+	* Makes randomly from layer sizes
+	*/
 	NeuralNet(std::vector<int> &layers, float mutate_mod_prob=0.2, float mutate_mod_range=0.1, float mutate_rand_prob=0.1, float mutate_rand_range=2.):
 		layers_num(layers.size()-1), //one layer isn't neurons but instead is input
 		_mutate_mod_prob(mutate_mod_prob),
@@ -44,6 +48,9 @@ public:
 		}
 	}
 
+	/**
+	* Makes exactly from specified weights
+	*/
 	NeuralNet(std::vector<MyMat> &weights, float mutate_mod_prob=0.2, float mutate_mod_range=0.1, float mutate_rand_prob=0.1, float mutate_rand_range=2.):
 		layers_num(weights.size()),
 		layers_weights(weights),
@@ -53,9 +60,49 @@ public:
 		_mutate_rand_range(mutate_rand_range)
 	{}
 
+	/**
+	*
+	* Loads from string
+	* 
+	*/
 	NeuralNet(std::string line) {
 		std::istringstream input{ line };
-		//TODO
+		DBOUT("\"" + line + "\"");
+		assert(line != "");
+		std::string token = "";
+		int layer_size;
+		int last_layer_size = -1;
+		input >> token;
+		layers_num = 0;
+
+		while (token != "|") {
+			layer_size = std::stoi(token);
+			if (last_layer_size != -1) {
+				layers_weights.push_back(MyMat(last_layer_size, layer_size));
+				layers_num++;
+			}
+			last_layer_size = layer_size;
+
+			input >> token;
+		}
+		
+		input >> _mutate_mod_prob;
+		input >> _mutate_mod_range;
+		input >> _mutate_rand_prob;
+		input >> _mutate_rand_range;
+
+		std::vector<int> architecture = get_layer_architecture();
+		int x_size;
+		int y_size;
+		for (int i = 0; i < layers_num; i++) {
+			x_size = architecture[i];
+			y_size = architecture[i + 1];
+			for (int x = 0; x < x_size; x++) {
+				for (int y = 0; y < y_size; y++) {
+					input >> layers_weights[i](x, y);
+				}
+			}
+		}
 	}
 
 	/**
@@ -156,8 +203,7 @@ public:
 			output << i << " ";
 		}
 		output << " | ";
-		output << _mutate_mod_prob << " " << _mutate_mod_range << " " << _mutate_rand_prob << " " << _mutate_rand_range;
-		output << " | ";
+		output << _mutate_mod_prob << " " << _mutate_mod_range << " " << _mutate_rand_prob << " " << _mutate_rand_range << " ";
 		int x_size;
 		int y_size;
 		for (int i = 0; i < layers_num; i++) {
